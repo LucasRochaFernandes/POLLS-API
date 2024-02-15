@@ -7,6 +7,7 @@ An API in Node.Js built with WebSockets and Redis
   - Fastify
   - Zod
   - Redis
+  - Docker
   - Prisma
 
 ### To run this project 
