@@ -9,6 +9,7 @@ An API in Node.Js built with WebSockets and Redis
   - Redis
   - Docker
   - Prisma
+  - WebSocket
 
 ### To run this project 
 First, you need to clone this project. Then, you can run the **docker-compose** to build the postgres and redis services:
