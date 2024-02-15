@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 import { prisma } from '../../../lib/prisma'
+import { redis } from '../../../lib/redis'
 
 export async function voteOnPoll(request: FastifyRequest, reply: FastifyReply) {
   const voteOnPollBody = z.object({
@@ -30,6 +31,8 @@ export async function voteOnPoll(request: FastifyRequest, reply: FastifyReply) {
             id: userPreviousVoteOnPoll.id,
           },
         })
+        // Função do redis que remove score(voto)
+        await redis.zincrby(pollId, -1, userPreviousVoteOnPoll.pollOptionId)
       } else {
         return reply.status(400).send({
           message: 'You have already voted on this poll',
@@ -54,6 +57,9 @@ export async function voteOnPoll(request: FastifyRequest, reply: FastifyReply) {
       pollOptionId,
     },
   })
+
+  // Função que registra um score(voto) no redis, com a key 'pollId'
+  await redis.zincrby(pollId, 1, pollOptionId)
 
   return reply.status(201).send()
 }
