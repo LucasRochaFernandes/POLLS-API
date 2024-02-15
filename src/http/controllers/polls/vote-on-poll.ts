@@ -3,6 +3,7 @@ import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 import { prisma } from '../../../lib/prisma'
 import { redis } from '../../../lib/redis'
+import { voting } from '../../../utils/voting-pub-sub'
 
 export async function voteOnPoll(request: FastifyRequest, reply: FastifyReply) {
   const voteOnPollBody = z.object({
@@ -32,7 +33,15 @@ export async function voteOnPoll(request: FastifyRequest, reply: FastifyReply) {
           },
         })
         // Função do redis que remove score(voto)
-        await redis.zincrby(pollId, -1, userPreviousVoteOnPoll.pollOptionId)
+        const votes = await redis.zincrby(
+          pollId,
+          -1,
+          userPreviousVoteOnPoll.pollOptionId,
+        )
+        voting.publish(pollId, {
+          pollOptionId: userPreviousVoteOnPoll.pollOptionId,
+          votes: Number(votes),
+        })
       } else {
         return reply.status(400).send({
           message: 'You have already voted on this poll',
@@ -59,7 +68,12 @@ export async function voteOnPoll(request: FastifyRequest, reply: FastifyReply) {
   })
 
   // Função que registra um score(voto) no redis, com a key 'pollId'
-  await redis.zincrby(pollId, 1, pollOptionId)
+  const votes = await redis.zincrby(pollId, 1, pollOptionId)
+
+  voting.publish(pollId, {
+    pollOptionId,
+    votes: Number(votes),
+  })
 
   return reply.status(201).send()
 }

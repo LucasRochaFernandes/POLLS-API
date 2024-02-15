@@ -9,8 +9,7 @@ app.register(cookie, {
   secret: 'c2c6d8be-9d86-4734-9fa8-7b178cc18b02',
   hook: 'onRequest',
 })
-
 app.register(fastifyWebsocket)
-app.register(pollResults)
 
+app.register(pollResults)
 app.register(pollsRoutes)
